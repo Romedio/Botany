@@ -6,34 +6,12 @@
         <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
-        <link rel="stylesheet" href="./resources/ol.css">
-        <link rel="stylesheet" href="resources/fontawesome-all.min.css">
-        <link rel="stylesheet" href="./resources/ol-layerswitcher.css">
-        <link rel="stylesheet" href="./resources/qgis2web.css">
-        <style>
-        html, body {
-            background-color: #f5c97e;
-        }
-        .ol-control > * {
-            background-color: #f8f8f8!important;
-            color: #444444!important;
-            border-radius: 0px;
-        }
-        .ol-attribution a, .gcd-gl-input::placeholder, .search-layer-input-search::placeholder {
-            color: #444444!important;
-        }
-        .search-layer-input-search {
-            background-color: #f8f8f8!important;
-        }
-        .ol-control > *:focus, .ol-control >*:hover {
-            background-color: rgba(248, 248, 248, 0.7)!important;
-        } 
-        .ol-control {
-            background-color: rgba(255,255,255,.4) !important;
-            padding: 2px !important;
-        } 
-        </style>
-
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/filter.css">
+<link rel="stylesheet" href="css/nouislider.min.css">
         <style>
         html, body, #map {
             width: 100%;
@@ -42,24 +20,2889 @@
             margin: 0;
         }
         </style>
-        <title>Testprojekt</title>
+        <title></title>
     </head>
     <body>
         <div id="map">
-            <div id="popup" class="ol-popup">
-                <a href="#" id="popup-closer" class="ol-popup-closer"></a>
-                <div id="popup-content"></div>
-            </div>
         </div>
-        <script src="resources/qgis2web_expressions.js"></script>
-        <script src="resources/polyfills.js"></script>
-        <script src="./resources/functions.js"></script>
-        <script src="./resources/ol.js"></script>
-        <script src="./resources/ol-layerswitcher.js"></script>
-        <script src="layers/Test_1.js"></script>
-        <script src="styles/Test_1_style.js"></script>
-        <script src="./layers/layers.js" type="text/javascript"></script> 
-        <script src="./resources/Autolinker.min.js"></script>
-        <script src="./resources/qgis2web.js"></script>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/tailDT.js"></script>
+<script src="js/nouislider.min.js"></script>
+<script src="js/wNumb.js"></script>
+        <script src="data/00021_Acercampestre_3.js"></script>
+        <script src="data/00024_Acernegundo_4.js"></script>
+        <script src="data/00031_Acerpalmatum_5.js"></script>
+        <script src="data/00032_Acerplatanoides_6.js"></script>
+        <script src="data/00033_Acerpseudoplatanus_7.js"></script>
+        <script src="data/00034_Acersaccharinum_8.js"></script>
+        <script src="data/00036_Acertataricum_9.js"></script>
+        <script src="data/00037_AcerginnalazuAcertataricum_10.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+            highlightLayer.openPopup();
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[46.4165519467733,8.998352196195848],[48.41452073800504,13.335540421253826]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_Positronnolabelsretina_0');
+        map.getPane('pane_Positronnolabelsretina_0').style.zIndex = 400;
+        var layer_Positronnolabelsretina_0 = L.tileLayer('https://a.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}@2x.png', {
+            pane: 'pane_Positronnolabelsretina_0',
+            opacity: 1.0,
+            attribution: '<a href="https://cartodb.com/basemaps/">Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_Positronnolabelsretina_0;
+        map.addLayer(layer_Positronnolabelsretina_0);
+        map.createPane('pane_OpenTopoMap_1');
+        map.getPane('pane_OpenTopoMap_1').style.zIndex = 401;
+        var layer_OpenTopoMap_1 = L.tileLayer('https://a.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OpenTopoMap_1',
+            opacity: 1.0,
+            attribution: '<a href="https://www.openstreetmap.org/copyright">Kartendaten: © OpenStreetMap-Mitwirkende, SRTM | Kartendarstellung: © OpenTopoMap (CC-BY-SA)</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 18
+        });
+        layer_OpenTopoMap_1;
+        map.addLayer(layer_OpenTopoMap_1);
+        map.createPane('pane_OpenStreetMap_2');
+        map.getPane('pane_OpenStreetMap_2').style.zIndex = 402;
+        var layer_OpenStreetMap_2 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OpenStreetMap_2',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OpenStreetMap_2;
+        map.addLayer(layer_OpenStreetMap_2);
+        function pop_00021_Acercampestre_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">TaxonStrin</th>\
+                        <td class="visible-with-data" id="TaxonStrin">' + (feature.properties['TaxonStrin'] !== null ? autolinker.link(feature.properties['TaxonStrin'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Angabest_1</th>\
+                        <td class="visible-with-data" id="Angabest_1">' + (feature.properties['Angabest_1'] !== null ? autolinker.link(feature.properties['Angabest_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">chorolog_1</th>\
+                        <td class="visible-with-data" id="chorolog_1">' + (feature.properties['chorolog_1'] !== null ? autolinker.link(feature.properties['chorolog_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+        function style_00021_Acercampestre_3_0(feature) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            // Start of if blocks and style check logic
+            if (exp_00021_Acercampestre_3rule0_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule1_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule2_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule3_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule4_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule5_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule6_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule7_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule8_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule9_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule10_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule11_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,202,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule12_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule13_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule14_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                radius: 18.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule15_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                shape: 'x',
+                radius: 14.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(190,178,151,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule16_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule17_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule18_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00021_Acercampestre_3rule19_eval_expression(context)) {
+                  return {
+                pane: 'pane_00021_Acercampestre_3',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+            else {
+                return {fill: false, stroke: false};
+            }
+        }
+        map.createPane('pane_00021_Acercampestre_3');
+        map.getPane('pane_00021_Acercampestre_3').style.zIndex = 403;
+        map.getPane('pane_00021_Acercampestre_3').style['mix-blend-mode'] = 'normal';
+        var layer_00021_Acercampestre_3 = new L.geoJson(json_00021_Acercampestre_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_00021_Acercampestre_3',
+            layerName: 'layer_00021_Acercampestre_3',
+            pane: 'pane_00021_Acercampestre_3',
+            onEachFeature: pop_00021_Acercampestre_3,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_00021_Acercampestre_3_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_00021_Acercampestre_3);
+        map.addLayer(layer_00021_Acercampestre_3);
+        function pop_00024_Acernegundo_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">TaxonStrin</th>\
+                        <td class="visible-with-data" id="TaxonStrin">' + (feature.properties['TaxonStrin'] !== null ? autolinker.link(feature.properties['TaxonStrin'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Angabest_1</th>\
+                        <td class="visible-with-data" id="Angabest_1">' + (feature.properties['Angabest_1'] !== null ? autolinker.link(feature.properties['Angabest_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">chorolog_1</th>\
+                        <td class="visible-with-data" id="chorolog_1">' + (feature.properties['chorolog_1'] !== null ? autolinker.link(feature.properties['chorolog_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+        function style_00024_Acernegundo_4_0(feature) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            // Start of if blocks and style check logic
+            if (exp_00024_Acernegundo_4rule0_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule1_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule2_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule3_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule4_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule5_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule6_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule7_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule8_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule9_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule10_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule11_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,202,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule12_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule13_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule14_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                radius: 18.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule15_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                shape: 'x',
+                radius: 14.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(190,178,151,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule16_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule17_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule18_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00024_Acernegundo_4rule19_eval_expression(context)) {
+                  return {
+                pane: 'pane_00024_Acernegundo_4',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+            else {
+                return {fill: false, stroke: false};
+            }
+        }
+        map.createPane('pane_00024_Acernegundo_4');
+        map.getPane('pane_00024_Acernegundo_4').style.zIndex = 404;
+        map.getPane('pane_00024_Acernegundo_4').style['mix-blend-mode'] = 'normal';
+        var layer_00024_Acernegundo_4 = new L.geoJson(json_00024_Acernegundo_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_00024_Acernegundo_4',
+            layerName: 'layer_00024_Acernegundo_4',
+            pane: 'pane_00024_Acernegundo_4',
+            onEachFeature: pop_00024_Acernegundo_4,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_00024_Acernegundo_4_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_00024_Acernegundo_4);
+        map.addLayer(layer_00024_Acernegundo_4);
+        function pop_00031_Acerpalmatum_5(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">TaxonStrin</th>\
+                        <td class="visible-with-data" id="TaxonStrin">' + (feature.properties['TaxonStrin'] !== null ? autolinker.link(feature.properties['TaxonStrin'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Angabest_1</th>\
+                        <td class="visible-with-data" id="Angabest_1">' + (feature.properties['Angabest_1'] !== null ? autolinker.link(feature.properties['Angabest_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">chorolog_1</th>\
+                        <td class="visible-with-data" id="chorolog_1">' + (feature.properties['chorolog_1'] !== null ? autolinker.link(feature.properties['chorolog_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+        function style_00031_Acerpalmatum_5_0(feature) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            // Start of if blocks and style check logic
+            if (exp_00031_Acerpalmatum_5rule0_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule1_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule2_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule3_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule4_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule5_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule6_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule7_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule8_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule9_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule10_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule11_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,202,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule12_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule13_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule14_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                radius: 18.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule15_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                shape: 'x',
+                radius: 14.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(190,178,151,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule16_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule17_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule18_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00031_Acerpalmatum_5rule19_eval_expression(context)) {
+                  return {
+                pane: 'pane_00031_Acerpalmatum_5',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+            else {
+                return {fill: false, stroke: false};
+            }
+        }
+        map.createPane('pane_00031_Acerpalmatum_5');
+        map.getPane('pane_00031_Acerpalmatum_5').style.zIndex = 405;
+        map.getPane('pane_00031_Acerpalmatum_5').style['mix-blend-mode'] = 'normal';
+        var layer_00031_Acerpalmatum_5 = new L.geoJson(json_00031_Acerpalmatum_5, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_00031_Acerpalmatum_5',
+            layerName: 'layer_00031_Acerpalmatum_5',
+            pane: 'pane_00031_Acerpalmatum_5',
+            onEachFeature: pop_00031_Acerpalmatum_5,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_00031_Acerpalmatum_5_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_00031_Acerpalmatum_5);
+        map.addLayer(layer_00031_Acerpalmatum_5);
+        function pop_00032_Acerplatanoides_6(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">TaxonStrin</th>\
+                        <td class="visible-with-data" id="TaxonStrin">' + (feature.properties['TaxonStrin'] !== null ? autolinker.link(feature.properties['TaxonStrin'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Angabest_1</th>\
+                        <td class="visible-with-data" id="Angabest_1">' + (feature.properties['Angabest_1'] !== null ? autolinker.link(feature.properties['Angabest_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">chorolog_1</th>\
+                        <td class="visible-with-data" id="chorolog_1">' + (feature.properties['chorolog_1'] !== null ? autolinker.link(feature.properties['chorolog_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+        function style_00032_Acerplatanoides_6_0(feature) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            // Start of if blocks and style check logic
+            if (exp_00032_Acerplatanoides_6rule0_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule1_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule2_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule3_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule4_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule5_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule6_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule7_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule8_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule9_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule10_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule11_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,202,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule12_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule13_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule14_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                radius: 18.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule15_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                shape: 'x',
+                radius: 14.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(190,178,151,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule16_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule17_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule18_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00032_Acerplatanoides_6rule19_eval_expression(context)) {
+                  return {
+                pane: 'pane_00032_Acerplatanoides_6',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+            else {
+                return {fill: false, stroke: false};
+            }
+        }
+        map.createPane('pane_00032_Acerplatanoides_6');
+        map.getPane('pane_00032_Acerplatanoides_6').style.zIndex = 406;
+        map.getPane('pane_00032_Acerplatanoides_6').style['mix-blend-mode'] = 'normal';
+        var layer_00032_Acerplatanoides_6 = new L.geoJson(json_00032_Acerplatanoides_6, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_00032_Acerplatanoides_6',
+            layerName: 'layer_00032_Acerplatanoides_6',
+            pane: 'pane_00032_Acerplatanoides_6',
+            onEachFeature: pop_00032_Acerplatanoides_6,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_00032_Acerplatanoides_6_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_00032_Acerplatanoides_6);
+        map.addLayer(layer_00032_Acerplatanoides_6);
+        function pop_00033_Acerpseudoplatanus_7(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">TaxonStrin</th>\
+                        <td class="visible-with-data" id="TaxonStrin">' + (feature.properties['TaxonStrin'] !== null ? autolinker.link(feature.properties['TaxonStrin'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Angabest_1</th>\
+                        <td class="visible-with-data" id="Angabest_1">' + (feature.properties['Angabest_1'] !== null ? autolinker.link(feature.properties['Angabest_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">chorolog_1</th>\
+                        <td class="visible-with-data" id="chorolog_1">' + (feature.properties['chorolog_1'] !== null ? autolinker.link(feature.properties['chorolog_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+        function style_00033_Acerpseudoplatanus_7_0(feature) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            // Start of if blocks and style check logic
+            if (exp_00033_Acerpseudoplatanus_7rule0_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule1_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule2_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule3_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule4_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule5_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule6_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule7_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule8_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule9_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule10_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule11_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,202,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule12_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule13_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule14_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                radius: 18.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule15_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                shape: 'x',
+                radius: 14.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(190,178,151,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule16_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule17_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule18_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00033_Acerpseudoplatanus_7rule19_eval_expression(context)) {
+                  return {
+                pane: 'pane_00033_Acerpseudoplatanus_7',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+            else {
+                return {fill: false, stroke: false};
+            }
+        }
+        map.createPane('pane_00033_Acerpseudoplatanus_7');
+        map.getPane('pane_00033_Acerpseudoplatanus_7').style.zIndex = 407;
+        map.getPane('pane_00033_Acerpseudoplatanus_7').style['mix-blend-mode'] = 'normal';
+        var layer_00033_Acerpseudoplatanus_7 = new L.geoJson(json_00033_Acerpseudoplatanus_7, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_00033_Acerpseudoplatanus_7',
+            layerName: 'layer_00033_Acerpseudoplatanus_7',
+            pane: 'pane_00033_Acerpseudoplatanus_7',
+            onEachFeature: pop_00033_Acerpseudoplatanus_7,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_00033_Acerpseudoplatanus_7_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_00033_Acerpseudoplatanus_7);
+        map.addLayer(layer_00033_Acerpseudoplatanus_7);
+        function pop_00034_Acersaccharinum_8(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">TaxonStrin</th>\
+                        <td class="visible-with-data" id="TaxonStrin">' + (feature.properties['TaxonStrin'] !== null ? autolinker.link(feature.properties['TaxonStrin'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Angabest_1</th>\
+                        <td class="visible-with-data" id="Angabest_1">' + (feature.properties['Angabest_1'] !== null ? autolinker.link(feature.properties['Angabest_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">chorolog_1</th>\
+                        <td class="visible-with-data" id="chorolog_1">' + (feature.properties['chorolog_1'] !== null ? autolinker.link(feature.properties['chorolog_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+        function style_00034_Acersaccharinum_8_0(feature) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            // Start of if blocks and style check logic
+            if (exp_00034_Acersaccharinum_8rule0_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule1_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule2_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule3_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule4_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule5_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule6_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule7_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule8_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule9_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule10_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule11_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,202,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule12_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule13_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule14_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                radius: 18.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule15_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                shape: 'x',
+                radius: 14.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(190,178,151,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule16_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule17_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule18_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00034_Acersaccharinum_8rule19_eval_expression(context)) {
+                  return {
+                pane: 'pane_00034_Acersaccharinum_8',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+            else {
+                return {fill: false, stroke: false};
+            }
+        }
+        map.createPane('pane_00034_Acersaccharinum_8');
+        map.getPane('pane_00034_Acersaccharinum_8').style.zIndex = 408;
+        map.getPane('pane_00034_Acersaccharinum_8').style['mix-blend-mode'] = 'normal';
+        var layer_00034_Acersaccharinum_8 = new L.geoJson(json_00034_Acersaccharinum_8, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_00034_Acersaccharinum_8',
+            layerName: 'layer_00034_Acersaccharinum_8',
+            pane: 'pane_00034_Acersaccharinum_8',
+            onEachFeature: pop_00034_Acersaccharinum_8,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_00034_Acersaccharinum_8_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_00034_Acersaccharinum_8);
+        map.addLayer(layer_00034_Acersaccharinum_8);
+        function pop_00036_Acertataricum_9(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">TaxonStrin</th>\
+                        <td class="visible-with-data" id="TaxonStrin">' + (feature.properties['TaxonStrin'] !== null ? autolinker.link(feature.properties['TaxonStrin'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Angabest_1</th>\
+                        <td class="visible-with-data" id="Angabest_1">' + (feature.properties['Angabest_1'] !== null ? autolinker.link(feature.properties['Angabest_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">chorolog_1</th>\
+                        <td class="visible-with-data" id="chorolog_1">' + (feature.properties['chorolog_1'] !== null ? autolinker.link(feature.properties['chorolog_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+        function style_00036_Acertataricum_9_0(feature) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            // Start of if blocks and style check logic
+            if (exp_00036_Acertataricum_9rule0_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule1_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule2_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule3_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule4_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule5_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule6_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule7_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule8_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule9_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule10_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule11_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,202,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule12_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule13_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule14_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                radius: 18.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule15_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                shape: 'x',
+                radius: 14.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(190,178,151,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule16_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule17_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule18_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00036_Acertataricum_9rule19_eval_expression(context)) {
+                  return {
+                pane: 'pane_00036_Acertataricum_9',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+            else {
+                return {fill: false, stroke: false};
+            }
+        }
+        map.createPane('pane_00036_Acertataricum_9');
+        map.getPane('pane_00036_Acertataricum_9').style.zIndex = 409;
+        map.getPane('pane_00036_Acertataricum_9').style['mix-blend-mode'] = 'normal';
+        var layer_00036_Acertataricum_9 = new L.geoJson(json_00036_Acertataricum_9, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_00036_Acertataricum_9',
+            layerName: 'layer_00036_Acertataricum_9',
+            pane: 'pane_00036_Acertataricum_9',
+            onEachFeature: pop_00036_Acertataricum_9,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_00036_Acertataricum_9_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_00036_Acertataricum_9);
+        map.addLayer(layer_00036_Acertataricum_9);
+        function pop_00037_AcerginnalazuAcertataricum_10(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">TaxonStrin</th>\
+                        <td class="visible-with-data" id="TaxonStrin">' + (feature.properties['TaxonStrin'] !== null ? autolinker.link(feature.properties['TaxonStrin'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Angabest_1</th>\
+                        <td class="visible-with-data" id="Angabest_1">' + (feature.properties['Angabest_1'] !== null ? autolinker.link(feature.properties['Angabest_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">chorolog_1</th>\
+                        <td class="visible-with-data" id="chorolog_1">' + (feature.properties['chorolog_1'] !== null ? autolinker.link(feature.properties['chorolog_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+        function style_00037_AcerginnalazuAcertataricum_10_0(feature) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            // Start of if blocks and style check logic
+            if (exp_00037_AcerginnalazuAcertataricum_10rule0_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule1_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule2_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule3_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule4_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule5_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule6_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule7_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,203,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule8_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule9_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(1,103,1,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule10_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(104,153,2,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule11_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,202,0,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule12_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule13_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                shape: 'square',
+                radius: 12.0,
+                stroke: false,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,209,26,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule14_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                radius: 18.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule15_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                shape: 'x',
+                radius: 14.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(190,178,151,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule16_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule17_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule18_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                shape: 'square',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,243,243,0.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_00037_AcerginnalazuAcertataricum_10rule19_eval_expression(context)) {
+                  return {
+                pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+                radius: 13.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,230,230,0.0)',
+                interactive: true,
+            };
+                }
+            else {
+                return {fill: false, stroke: false};
+            }
+        }
+        map.createPane('pane_00037_AcerginnalazuAcertataricum_10');
+        map.getPane('pane_00037_AcerginnalazuAcertataricum_10').style.zIndex = 410;
+        map.getPane('pane_00037_AcerginnalazuAcertataricum_10').style['mix-blend-mode'] = 'normal';
+        var layer_00037_AcerginnalazuAcertataricum_10 = new L.geoJson(json_00037_AcerginnalazuAcertataricum_10, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_00037_AcerginnalazuAcertataricum_10',
+            layerName: 'layer_00037_AcerginnalazuAcertataricum_10',
+            pane: 'pane_00037_AcerginnalazuAcertataricum_10',
+            onEachFeature: pop_00037_AcerginnalazuAcertataricum_10,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_00037_AcerginnalazuAcertataricum_10_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_00037_AcerginnalazuAcertataricum_10);
+        map.addLayer(layer_00037_AcerginnalazuAcertataricum_10);
+        var baseMaps = {};
+        var overlaysTree = [
+            {label: '00037_Acer ginnala (zu Acer tataricum)<br /><table><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_0.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_1.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_2.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_3.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_4.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_5.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_6.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_7.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_8.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_9.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_10.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_11.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_12.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_13.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_14.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_15.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_16.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_17.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_18.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00037_AcerginnalazuAcertataricum_10_19.png" /></td><td></td></tr></table>', layer: layer_00037_AcerginnalazuAcertataricum_10},
+            {label: '00036_Acer tataricum<br /><table><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_0.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_1.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_2.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_3.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_4.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_5.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_6.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_7.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_8.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_9.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_10.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_11.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_12.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_13.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_14.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_15.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_16.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_17.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_18.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00036_Acertataricum_9_19.png" /></td><td></td></tr></table>', layer: layer_00036_Acertataricum_9},
+            {label: '00034_Acer saccharinum<br /><table><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_0.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_1.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_2.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_3.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_4.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_5.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_6.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_7.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_8.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_9.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_10.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_11.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_12.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_13.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_14.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_15.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_16.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_17.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_18.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00034_Acersaccharinum_8_19.png" /></td><td></td></tr></table>', layer: layer_00034_Acersaccharinum_8},
+            {label: '00033_Acer pseudoplatanus<br /><table><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_0.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_1.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_2.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_3.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_4.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_5.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_6.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_7.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_8.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_9.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_10.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_11.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_12.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_13.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_14.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_15.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_16.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_17.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_18.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00033_Acerpseudoplatanus_7_19.png" /></td><td></td></tr></table>', layer: layer_00033_Acerpseudoplatanus_7},
+            {label: '00032_Acer platanoides<br /><table><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_0.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_1.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_2.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_3.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_4.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_5.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_6.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_7.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_8.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_9.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_10.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_11.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_12.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_13.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_14.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_15.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_16.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_17.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_18.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00032_Acerplatanoides_6_19.png" /></td><td></td></tr></table>', layer: layer_00032_Acerplatanoides_6},
+            {label: '00031_Acer palmatum<br /><table><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_0.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_1.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_2.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_3.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_4.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_5.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_6.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_7.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_8.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_9.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_10.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_11.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_12.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_13.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_14.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_15.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_16.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_17.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_18.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00031_Acerpalmatum_5_19.png" /></td><td></td></tr></table>', layer: layer_00031_Acerpalmatum_5},
+            {label: '00024_Acer negundo<br /><table><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_0.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_1.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_2.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_3.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_4.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_5.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_6.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_7.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_8.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_9.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_10.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_11.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_12.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_13.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_14.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_15.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_16.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_17.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_18.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00024_Acernegundo_4_19.png" /></td><td></td></tr></table>', layer: layer_00024_Acernegundo_4},
+            {label: '00021_Acer campestre<br /><table><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_0.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_1.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_2.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_3.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_4.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_5.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_6.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_7.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_8.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_9.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_10.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_11.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_12.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_13.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_14.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_15.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_16.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_17.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_18.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/00021_Acercampestre_3_19.png" /></td><td></td></tr></table>', layer: layer_00021_Acercampestre_3},
+            {label: "OpenStreetMap", layer: layer_OpenStreetMap_2},
+            {label: "OpenTopoMap", layer: layer_OpenTopoMap_1},
+            {label: "Positron [no labels] (retina)", layer: layer_Positronnolabelsretina_0},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: true,
+        });
+        lay.addTo(map);
+        setBounds();
+        var mapDiv = document.getElementById('map');
+        var row = document.createElement('div');
+        row.className="row";
+        row.id="all";
+        row.style.height = "100%";
+        var col1 = document.createElement('div');
+        col1.className="col9";
+        col1.id = "mapWindow";
+        col1.style.height = "99%";
+        col1.style.width = "80%";
+        col1.style.display = "inline-block";
+        var col2 = document.createElement('div');
+        col2.className="col3";
+        col2.id = "menu";
+        col2.style.display = "inline-block";
+        mapDiv.parentNode.insertBefore(row, mapDiv);
+        document.getElementById("all").appendChild(col1);
+        document.getElementById("all").appendChild(col2);
+        col1.appendChild(mapDiv)
+        var Filters = {"TaxonStrin": "str","Zeit": "str"};
+        function filterFunc() {
+          map.eachLayer(function(lyr){
+          if ("options" in lyr && "dataVar" in lyr["options"]){
+            features = this[lyr["options"]["dataVar"]].features.slice(0);
+            try{
+              for (key in Filters){
+                keyS = key.replace(/[^a-zA-Z0-9_]/g, "")
+                if (Filters[key] == "str" || Filters[key] == "bool"){
+                  var selection = [];
+                  var options = document.getElementById("sel_" + keyS).options
+                  for (var i=0; i < options.length; i++) {
+                    if (options[i].selected) selection.push(options[i].value);
+                  }
+                    try{
+                      if (key in features[0].properties){
+                        for (i = features.length - 1;
+                          i >= 0; --i){
+                          if (selection.indexOf(
+                          features[i].properties[key])<0
+                          && selection.length>0) {
+                          features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                  }
+                }
+                if (Filters[key] == "int"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (parseInt(features[i].properties[key])
+                          < sliderVals[0]
+                          || parseInt(features[i].properties[key])
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "real"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (features[i].properties[key]
+                          < sliderVals[0]
+                          || features[i].properties[key]
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "date"
+                  || Filters[key] == "datetime"
+                  || Filters[key] == "time"){
+                  try{
+                    if (key in features[0].properties){
+                      HTMLkey = key.replace(/[&\/\\#,+()$~%.'":*?<>{} ]/g, '');
+                      startdate = document.getElementById("dat_" +
+                        HTMLkey + "_date1").value.replace(" ", "T");
+                      enddate = document.getElementById("dat_" +
+                        HTMLkey + "_date2").value.replace(" ", "T");
+                      for (i = features.length - 1; i >= 0; --i){
+                        if (features[i].properties[key] < startdate
+                          || features[i].properties[key] > enddate){
+                          features.splice(i,1);
+                        }
+                      }
+                    }
+                  } catch(err){
+                  }
+                }
+              }
+            } catch(err){
+            }
+          this[lyr["options"]["layerName"]].clearLayers();
+          this[lyr["options"]["layerName"]].addData(features);
+          }
+          })
+        }
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_TaxonStrin = document.createElement('div');
+            div_TaxonStrin.id = "div_TaxonStrin";
+            div_TaxonStrin.className= "filterselect";
+            document.getElementById("menu").appendChild(div_TaxonStrin);
+            sel_TaxonStrin = document.createElement('select');
+            sel_TaxonStrin.multiple = true;
+            sel_TaxonStrin.size = 8;
+            sel_TaxonStrin.id = "sel_TaxonStrin";
+            var TaxonStrin_options_str = "<option value='' unselected></option>";
+            sel_TaxonStrin.onchange = function(){filterFunc()};
+            TaxonStrin_options_str  += '<option value="Acer campestre">Acer campestre</option>';
+            TaxonStrin_options_str  += '<option value="Acer ginnala (zu Acer tataricum)">Acer ginnala (zu Acer tataricum)</option>';
+            TaxonStrin_options_str  += '<option value="Acer negundo">Acer negundo</option>';
+            TaxonStrin_options_str  += '<option value="Acer palmatum">Acer palmatum</option>';
+            TaxonStrin_options_str  += '<option value="Acer platanoides">Acer platanoides</option>';
+            TaxonStrin_options_str  += '<option value="Acer pseudoplatanus">Acer pseudoplatanus</option>';
+            TaxonStrin_options_str  += '<option value="Acer saccharinum">Acer saccharinum</option>';
+            TaxonStrin_options_str  += '<option value="Acer tataricum">Acer tataricum</option>';
+            sel_TaxonStrin.innerHTML = TaxonStrin_options_str;
+            div_TaxonStrin.appendChild(sel_TaxonStrin);
+            var lab_TaxonStrin = document.createElement('div');
+            lab_TaxonStrin.innerHTML = 'TaxonStrin';
+            lab_TaxonStrin.className = 'filterlabel';
+            div_TaxonStrin.appendChild(lab_TaxonStrin);
+            var reset_TaxonStrin = document.createElement('div');
+            reset_TaxonStrin.innerHTML = 'clear filter';
+            reset_TaxonStrin.className = 'filterlabel';
+            reset_TaxonStrin.onclick = function() {
+                var options = document.getElementById("sel_TaxonStrin").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_TaxonStrin.appendChild(reset_TaxonStrin);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_Zeit = document.createElement('div');
+            div_Zeit.id = "div_Zeit";
+            div_Zeit.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Zeit);
+            sel_Zeit = document.createElement('select');
+            sel_Zeit.multiple = true;
+            sel_Zeit.size = 5;
+            sel_Zeit.id = "sel_Zeit";
+            var Zeit_options_str = "<option value='' unselected></option>";
+            sel_Zeit.onchange = function(){filterFunc()};
+            Zeit_options_str  += '<option value="1950-1979">1950-1979</option>';
+            Zeit_options_str  += '<option value="1980-1999">1980-1999</option>';
+            Zeit_options_str  += '<option value="ab 2000">ab 2000</option>';
+            Zeit_options_str  += '<option value="ohne Angabe">ohne Angabe</option>';
+            Zeit_options_str  += '<option value="vor 1950">vor 1950</option>';
+            sel_Zeit.innerHTML = Zeit_options_str;
+            div_Zeit.appendChild(sel_Zeit);
+            var lab_Zeit = document.createElement('div');
+            lab_Zeit.innerHTML = 'Zeit';
+            lab_Zeit.className = 'filterlabel';
+            div_Zeit.appendChild(lab_Zeit);
+            var reset_Zeit = document.createElement('div');
+            reset_Zeit.innerHTML = 'clear filter';
+            reset_Zeit.className = 'filterlabel';
+            reset_Zeit.onclick = function() {
+                var options = document.getElementById("sel_Zeit").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_Zeit.appendChild(reset_Zeit);
+        </script>
     </body>
 </html>
